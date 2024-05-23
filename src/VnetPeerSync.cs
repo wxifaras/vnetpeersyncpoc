@@ -35,6 +35,8 @@ public class VnetPeerSync
                     RemoteVirtualNetworkId = new ResourceIdentifier($"/subscriptions/{setting.SubscriptionId}/resourceGroups/{setting.ResourceGroup}/providers/Microsoft.Network/virtualNetworks/{setting.Vnet2}"),
                 };
 
+                Console.WriteLine($"Peer syncing: {collection.Id}");
+
                 var syncRemoteAddressSpace = SyncRemoteAddressSpace.True;
                 ArmOperation<VirtualNetworkPeeringResource> lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, setting.VnetPeerName, data, syncRemoteAddressSpace: syncRemoteAddressSpace);
                 VirtualNetworkPeeringResource result = lro.Value;
@@ -43,6 +45,10 @@ public class VnetPeerSync
                 // but just for demo, we get its data from this resource instance
                 VirtualNetworkPeeringData resourceData = result.Data;
                 Console.WriteLine($"Succeeded on id: {resourceData.Id}");
+            }
+            else
+            {
+                Console.WriteLine("Invalid VnetSettings");
             }
         }
     }
