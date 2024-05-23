@@ -18,6 +18,9 @@ Here's what each property means:
 - `Vnet2`: The name of the second VNet in the peering.
 - `VnetPeerName`: The name of the VNet peering.
 
+## Authentication
+The POC uses the [DefaultAzureCredential](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/?tabs=command-line) to authenticate.
+
 ## Reference Documenation
 
 [Sync Peering](https://learn.microsoft.com/en-us/rest/api/virtualnetwork/virtual-network-peerings/create-or-update?view=rest-virtualnetwork-2023-09-01&tabs=dotnet#sync-peering)
