@@ -2,10 +2,10 @@
 C# .NET Sync Peering Poc
 
 ## Overview
-In Azure, ìsync peeringî refers to the process of updating the address space of a peered virtual network.
-When you update the address space for a virtual network, you need to sync the virtual network peer for each remote peered virtual network.
-
 This is a simple POC that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK.
+
+In Azure, ‚Äúsync peering‚Äù refers to the process of updating the address space of a peered virtual network.
+When you update the address space for a virtual network, you need to sync the virtual network peer for each remote peered virtual network.
 
 ## Configuration
 The POC uses a configuration file to set up Azure Virtual Network (VNet) peering. The configuration is stored in a `VNETSettings` array in the `appsettings.json` file. Each object in the array represents a different VNet peering configuration.
