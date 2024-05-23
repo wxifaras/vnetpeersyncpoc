@@ -2,7 +2,7 @@
 C# .NET Sync Peering Poc
 
 ## Overview
-This is a simple POC that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK.
+This is a simple Proof of Concept (POC) console application that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK.
 
 In Azure, “sync peering” refers to the process of updating the address space of a peered virtual network.
 When you update the address space for a virtual network, you need to sync the virtual network peer for each remote peered virtual network.
