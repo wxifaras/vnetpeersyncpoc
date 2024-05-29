@@ -1,8 +1,5 @@
-# vnetpeersyncpoc
-C# .NET Sync Peering Poc
-
-## Overview
-This is a simple Proof of Concept (POC) console application that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK.
+# Overview
+This is a simple Proof of Concept (POC) console application that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK. The code assumes <b>Hub-spoke</b> network topology.
 
 In Azure, “sync peering” refers to the process of updating the address space of a peered virtual network.
 When you update the address space for a virtual network, you need to sync the virtual network peer for each remote peered virtual network.
@@ -12,11 +9,13 @@ The POC uses a configuration file to set up Azure Virtual Network (VNet) peering
 
 Here's what each property means:
 
-- `SubscriptionId`: The ID of your Azure subscription.
-- `ResourceGroup`: The name of the resource group where your VNets are located.
-- `Vnet1`: The name of the first VNet in the peering.
-- `Vnet2`: The name of the second VNet in the peering.
-- `VnetPeerName`: The name of the VNet peering.
+- `SubscriptionOne`: The ID of your Hub Azure subscription.
+- `SubscriptionTwo`: The ID of your Spoke Azure subscription.
+- `ResourceGroupOne`: The name of the resource group where your Hub VNET is located.
+- `ResourceGroupTwo`: The name of the resource group where your Spoke VNET is located.
+- `Vnet1`: The name of the Hub VNet.
+- `Vnet2`: The name of the Spoke VNet.
+- `VnetPeerName`: The name of the Hub VNet peer.
 
 ## Authentication
 The POC uses the [DefaultAzureCredential](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/?tabs=command-line) to authenticate.
