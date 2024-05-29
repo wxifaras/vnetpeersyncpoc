@@ -2,16 +2,20 @@
 {
     public  class VnetSettings
     {
-        public required string SubscriptionId { get; set; }
-        public required string ResourceGroup { get; set; }
-        public required string Vnet1 { get; set; }
-        public required string Vnet2 { get; set; }
-        public required string VnetPeerName { get; set; }
+        public string SubscriptionOne { get; set; }
+        public string SubscriptionTwo { get; set; }
+        public string ResourceGroupOne { get; set; }
+        public string ResourceGroupTwo { get; set; }
+        public string Vnet1 { get; set; }
+        public string Vnet2 { get; set; }
+        public string VnetPeerName { get; set; }
 
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(SubscriptionId) &&
-                   !string.IsNullOrEmpty(ResourceGroup) &&
+            return !string.IsNullOrEmpty(SubscriptionOne) &&
+                   !string.IsNullOrEmpty(SubscriptionTwo) &&
+                   !string.IsNullOrEmpty(ResourceGroupOne) &&
+                   !string.IsNullOrEmpty(ResourceGroupTwo) &&
                    !string.IsNullOrEmpty(Vnet1) &&
                    !string.IsNullOrEmpty(Vnet2) &&
                    !string.IsNullOrEmpty(VnetPeerName);
