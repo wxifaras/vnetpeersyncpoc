@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace VNETPeeringSyncPoc
 {
@@ -14,8 +15,21 @@ namespace VNETPeeringSyncPoc
                 .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
                 IConfigurationRoot configuration = builder.Build();
-                var sync = new VnetPeerSync(configuration);
-                await sync.SyncPeering();
+
+                using var loggerFactory = LoggerFactory.Create(builder =>
+                {
+                    builder
+                        .AddFilter("Microsoft", LogLevel.Warning)
+                        .AddFilter("System", LogLevel.Warning)
+                        .AddFilter("Program", LogLevel.Debug)
+                        .AddConsole();
+                });
+
+                var logger = loggerFactory.CreateLogger<VNetPeer>();
+                var sync = new VNetPeer(logger);
+                var vnetSettings = new List<VNetSettings>();
+                configuration.GetSection("VnetSettings").Bind(vnetSettings);
+                await sync.SyncVnetPeers(vnetSettings);
             }
             catch (Exception e)
             {

@@ -8,13 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Core" Version="1.39.0" />
-    <PackageReference Include="Azure.Identity" Version="1.11.3" />
-    <PackageReference Include="Azure.ResourceManager" Version="1.12.0" />
-    <PackageReference Include="Azure.ResourceManager.Network" Version="1.7.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VNetSyncPeer\VNetSyncPeer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
