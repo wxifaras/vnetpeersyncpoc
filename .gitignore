@@ -8,3 +8,4 @@
 /.vs
 /src/VNetSyncPeer/bin/Debug/net8.0
 /src/VNetSyncPeer/obj
+/src/VNetPeerSyncConsoleApp/appsettings.local.json
