@@ -20,7 +20,7 @@ namespace SyncPeeringFunction
         }
 
         [Function("SyncVnetPeer")]
-        public async Task<IActionResult> SyncVnetPeer([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
+        public async Task<IActionResult> SyncVnetPeer([HttpTrigger(AuthorizationLevel.Function, "put")] HttpRequest req)
         {
             try
             {
