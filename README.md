@@ -42,7 +42,7 @@ Syncs two VNet peers.
 ```
 
 ## Authentication
-The POC uses the [DefaultAzureCredential](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/?tabs=command-line) to authenticate.
+The sample uses the [DefaultAzureCredential](https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/?tabs=command-line) to authenticate.
 
 ## Reference Documenation
 
