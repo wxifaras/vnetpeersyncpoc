@@ -25,7 +25,7 @@ Gets a specified virtual network peering.
 }
 ```
 
-### [POST] api/SyncVnetPeer
+### [PUT] api/SyncVnetPeer
 Syncs two VNet peers.
 
 #### Configuration
