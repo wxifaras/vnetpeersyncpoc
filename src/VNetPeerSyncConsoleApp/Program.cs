@@ -27,7 +27,7 @@ namespace VNETPeeringSyncPoc
 
                 var logger = loggerFactory.CreateLogger<VNetPeer>();
                 var sync = new VNetPeer(logger);
-                var vnetSettings = new List<VNetSettings>();
+                var vnetSettings = new VNetSyncPeeringRequest();
                 configuration.GetSection("VnetSettings").Bind(vnetSettings);
                 await sync.SyncVnetPeers(vnetSettings);
             }

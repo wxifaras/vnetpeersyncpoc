@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using VNETPeeringSyncPoc;
+using VNetSyncPeer;
 
 namespace SyncPeeringFunction
 {
@@ -18,24 +19,70 @@ namespace SyncPeeringFunction
             _logger = logger;
         }
 
-        [Function("VNetPeerFunction")]
-        public async Task<IActionResult> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        [Function("SyncVnetPeer")]
+        public async Task<IActionResult> SyncVnetPeer([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
         {
-            _logger.LogInformation("VNetPeerFunction Invoked");
+            try
+            {
+                _logger.LogInformation("SyncVnetPeerFunction Invoked");
 
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
-            _logger.LogInformation($"Request: {requestBody}");
+                if (string.IsNullOrEmpty(requestBody))
+                {
+                    return new BadRequestObjectResult("Request body is empty");
+                }
 
-            var settings = JsonSerializer.Deserialize<List<VNetSettings>>(requestBody);
-                        
-            var response = await _peer.SyncVnetPeersHttp(settings);
+                _logger.LogInformation($"Request: {requestBody}");
 
-            var jsonResult = JsonSerializer.Serialize(response);
+                var vnetSyncPeeringRequest = JsonSerializer.Deserialize<VNetSyncPeeringRequest>(requestBody);
 
-            _logger.LogInformation($"Response: {jsonResult}");
+                var response = await _peer.SyncVnetPeers(vnetSyncPeeringRequest);
 
-            return new OkObjectResult(jsonResult);
+                _logger.LogInformation($"Response: {response}");
+
+                return new OkObjectResult(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to sync peering");
+
+                return new BadRequestObjectResult("Failed to sync peering");
+            }
+        }
+
+        [Function("GetVnetPeer")]
+        public async Task<IActionResult> GetVnetPeer([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        {
+            try
+            {
+                _logger.LogInformation("GetVnetPeer Invoked");
+
+                var peeringData = string.Empty;
+
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
+                if (string.IsNullOrEmpty(requestBody))
+                {
+                    return new BadRequestObjectResult("Request body is empty");
+                }
+
+                _logger.LogInformation($"Request: {requestBody}");
+
+                var getVnetPeerRequest = JsonSerializer.Deserialize<VNetGetPeerRequest>(requestBody);
+
+                peeringData = await _peer.GetVnetPeer(getVnetPeerRequest);
+
+                _logger.LogInformation($"Response: {peeringData}");
+
+                return new OkObjectResult(peeringData);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get peering");
+
+                return new BadRequestObjectResult("Failed to get peering");
+            }
         }
     }
 }

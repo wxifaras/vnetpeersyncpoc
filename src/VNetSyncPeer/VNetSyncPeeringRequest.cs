@@ -1,6 +1,6 @@
 ﻿namespace VNETPeeringSyncPoc
 {
-    public  class VNetSettings
+    public  class VNetSyncPeeringRequest
     {
         public string SubscriptionOne { get; set; }
         public string SubscriptionTwo { get; set; }

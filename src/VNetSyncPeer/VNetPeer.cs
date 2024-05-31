@@ -5,10 +5,9 @@ using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
-using System.Text;
 using System.Text.Json;
 using VNETPeeringSyncPoc;
+using VNetSyncPeer;
 
 public class VNetPeer : IVNetPeer
 {
@@ -19,157 +18,88 @@ public class VNetPeer : IVNetPeer
         _log = logger;
     }
 
-    public async Task<List<dynamic>> SyncVnetPeers(List<VNetSettings> settings)
+    public async Task<string> GetVnetPeer(VNetGetPeerRequest request)
     {
-        var response = new List<dynamic>();
+        var getVnetPeerResult = string.Empty;
+        var cred = new DefaultAzureCredential();
+        var client = new ArmClient(cred);
 
-        if (settings.Any())
+        ResourceIdentifier virtualNetworkResourceId = VirtualNetworkResource.CreateResourceIdentifier(request.SubscriptionId, request.ResourceGroup, request.VNetName);
+
+        VirtualNetworkResource virtualNetwork = client.GetVirtualNetworkResource(virtualNetworkResourceId);
+
+        VirtualNetworkPeeringCollection collection = virtualNetwork.GetVirtualNetworkPeerings();
+
+        NullableResponse<VirtualNetworkPeeringResource> response = await collection.GetIfExistsAsync(request.VNetPeerName);
+
+        VirtualNetworkPeeringResource? result = response.HasValue ? response.Value : null;
+
+        if (result != null)
         {
-            foreach (var setting in settings)
+            getVnetPeerResult = response.GetRawResponse().Content.ToString();
+            _log.LogInformation($"Response Result: {getVnetPeerResult}");
+        }
+        else
+        {
+            _log.LogInformation("No peering found");
+        }
+
+        return getVnetPeerResult;
+    }
+
+    public async Task<string> SyncVnetPeers(VNetSyncPeeringRequest request)
+    {
+        var syncPeerResponse = string.Empty;
+
+        if (request.IsValid())
+        {
+            var settingJson = JsonSerializer.Serialize(request);
+
+            _log.LogInformation($"Syncing peering {settingJson}");
+
+            var cred = new DefaultAzureCredential();
+            var client = new ArmClient(cred);
+
+            var virtualNetworkResourceId = VirtualNetworkResource.CreateResourceIdentifier(request.SubscriptionOne, request.ResourceGroupOne, request.Vnet1);
+            
+            var virtualNetwork = client.GetVirtualNetworkResource(virtualNetworkResourceId);
+
+            var collection = virtualNetwork.GetVirtualNetworkPeerings();
+
+            // invoke the operation
+            var data = new VirtualNetworkPeeringData()
             {
-                try
-                {
-                    if (setting.IsValid())
-                    {
-                        var settingJson = JsonSerializer.Serialize(setting);
+                AllowVirtualNetworkAccess = true,
+                AllowForwardedTraffic = true,
+                AllowGatewayTransit = false,
+                UseRemoteGateways = false,
+                RemoteVirtualNetworkId = new ResourceIdentifier($"/subscriptions/{request.SubscriptionTwo}/resourceGroups/{request.ResourceGroupTwo}/providers/Microsoft.Network/virtualNetworks/{request.Vnet2}"),
+            };
 
-                        _log.LogInformation($"Syncing peering {settingJson}");
+            _log.LogInformation($"Peer syncing: {collection.Id}");
 
-                        var cred = new DefaultAzureCredential();
-                        var client = new ArmClient(cred);
+            var syncRemoteAddressSpace = SyncRemoteAddressSpace.True;
+            
+            ArmOperation<VirtualNetworkPeeringResource> response = await collection.CreateOrUpdateAsync(WaitUntil.Completed, request.VnetPeerName, data, syncRemoteAddressSpace: syncRemoteAddressSpace);
 
-                        var virtualNetworkResourceId = VirtualNetworkResource.CreateResourceIdentifier(setting.SubscriptionOne, setting.ResourceGroupOne, setting.Vnet1);
-                        var virtualNetwork = client.GetVirtualNetworkResource(virtualNetworkResourceId);
+            VirtualNetworkPeeringResource? result = response.HasValue ? response.Value : null;
 
-                        var collection = virtualNetwork.GetVirtualNetworkPeerings();
+            if (result != null)
+            {
+               _log.LogInformation($"Succeeded on id: {response.Value.Data.Id}");
 
-                        // invoke the operation
-                        var data = new VirtualNetworkPeeringData()
-                        {
-                            AllowVirtualNetworkAccess = true,
-                            AllowForwardedTraffic = true,
-                            AllowGatewayTransit = false,
-                            UseRemoteGateways = false,
-                            RemoteVirtualNetworkId = new ResourceIdentifier($"/subscriptions/{setting.SubscriptionTwo}/resourceGroups/{setting.ResourceGroupTwo}/providers/Microsoft.Network/virtualNetworks/{setting.Vnet2}"),
-                        };
+               var temp = await response.Value.GetAsync();
 
-                        _log.LogInformation($"Peer syncing: {collection.Id}");
+               syncPeerResponse = temp.GetRawResponse().Content.ToString();
 
-                        var syncRemoteAddressSpace = SyncRemoteAddressSpace.True;
-                        ArmOperation<VirtualNetworkPeeringResource> lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, setting.VnetPeerName, data, syncRemoteAddressSpace: syncRemoteAddressSpace);
-                        VirtualNetworkPeeringResource result = lro.Value;
-                        VirtualNetworkPeeringData resourceData = result.Data;
-
-                        _log.LogInformation($"Succeeded on id: {resourceData.Id}");
-
-                        var json = JsonSerializer.Serialize(resourceData);
-
-                        _log.LogInformation($"Response Result: {json}");
-
-                        response.Add(resourceData);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _log.LogError(ex, "Failed to sync peering");
-                }
+               _log.LogInformation($"Response Result: {syncPeerResponse}");
+            }
+            else
+            {
+                _log.LogInformation("Unable to sync peers.");
             }
         }
 
-        return response;
+        return syncPeerResponse;
     }
-
-    public async Task<List<dynamic>> SyncVnetPeersHttp(List<VNetSettings> settings)
-    {
-        var response = new List<dynamic>();
-
-        foreach (var setting in settings)
-        {
-            try
-            {
-                if (setting.IsValid())
-                {
-                    var settingJson = JsonSerializer.Serialize(setting);
-
-                    _log.LogInformation($"Syncing peering {settingJson}");
-
-                    var cred = new DefaultAzureCredential();
-                    var context = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
-                    var token = await cred.GetTokenAsync(context);
-
-                    using var httpClient = new HttpClient();
-                    httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token.Token}");
-
-                    var requestUri = $"https://management.azure.com/subscriptions/{setting.SubscriptionOne}/resourceGroups/{setting.ResourceGroupOne}/providers/Microsoft.Network/virtualNetworks/{setting.Vnet1}/virtualNetworkPeerings/{setting.VnetPeerName}?syncRemoteAddressSpace=true&api-version=2023-09-01";
-                    var payload = new
-                    {
-                        properties = new
-                        {
-                            allowVirtualNetworkAccess = true,
-                            allowForwardedTraffic = true,
-                            allowGatewayTransit = false,
-                            useRemoteGateways = false,
-                            peerCompleteVnets = true,
-                            remoteVirtualNetwork = new
-                            {
-                                id = $"/subscriptions/{setting.SubscriptionTwo}/resourceGroups/{setting.ResourceGroupTwo}/providers/Microsoft.Network/virtualNetworks/{setting.Vnet2}"
-                            }
-                        }
-                    };
-
-                    var jsonPayload = JsonSerializer.Serialize(payload);
-                    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-                    var httpResponse = await httpClient.PutAsync(requestUri, content);
-
-                    if (httpResponse.IsSuccessStatusCode)
-                    {
-                        _log.LogInformation("Request succeeded.");
-
-                        var responseBody = await httpResponse.Content.ReadAsStringAsync();
-
-                        _log.LogInformation($"Response Body:{responseBody}");
-
-                        response.Add(responseBody);
-                    }
-                    else
-                    {
-                        _log.LogError($"Request failed with status code: {httpResponse.StatusCode}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "Failed to sync peering");
-            }
-        }
-    
-        return response;
-    }
-
-    //private async Task<TokenCredential> GetCredential()
-    //{
-    //    var authority = "https://login.microsoftonline.com/<tenantid>";
-    //    var clientId = "";
-    //    var clientSecret = "";
-
-    //    string[] scopes = new string[] { "https://management.azure.com/.default" };
-
-    //    var app = ConfidentialClientApplicationBuilder.Create(clientId)
-    //        .WithClientSecret(clientSecret)
-    //        .WithAuthority(new Uri(authority))
-    //        .Build();
-
-    //    var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
-
-    //    var accessToken = result.AccessToken;
-    //    var credential = new VNETPeerSyncPoc.SimpleTokenCredential(accessToken);
-    //    return credential;
-    //}
-}
-
-public interface IVNetPeer
-{
-    Task<List<dynamic>> SyncVnetPeers(List<VNetSettings> settings);
-    Task<List<dynamic>> SyncVnetPeersHttp(List<VNetSettings> settings);
 }
