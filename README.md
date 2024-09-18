@@ -1,8 +1,6 @@
 # Overview
 Sample code that demonstrates how to perform Sync Peering between two virtual networks in Azure using the Azure .NET SDK. The code assumes a <b>Hub-spoke</b> network topology.
 
-The sample code is shown an Azure Function.
-
 ## Sync Peering
 In Azure, “sync peering” refers to the process of updating the address space of a peered virtual network.
 When you update the address space for a virtual network, you need to sync the virtual network peer for each remote peered virtual network.
